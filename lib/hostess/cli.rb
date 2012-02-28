@@ -20,8 +20,10 @@ require 'pp'
 module Hostess
   class CLI < Thor
 
-    def initialize(*)
+    def initialize(*args)
       super
+
+      @nodes = Fog::Compute[:rackspace].servers
 
       @connection = Fog::Rackspace
 
@@ -42,10 +44,28 @@ module Hostess
 
     desc "show", "Show a load balancer by ID"
     def show(load_balancer_id)
-      pp @load_balancers.get_load_balancer(load_balancer_id)
+      pp @load_balancers.get_load_balancer(load_balancer_id).body['loadBalancer']
+    end
+
+    # create_load_balancer(name, protocol, port, virtual_ips, nodes)
+    desc "create", "Create a new load balancer"
+    def create(name, protocol, port, node_search)
+      lb = @load_balancers.list_load_balancers.body['loadBalancers'].find{|key, val| key['name'] == name}
+      if lb
+        puts "Existing load balancer with #{name}, #{protocol}, #{port}, #{node_search} has vip of #{lb['virtualIps']}"
+      else
+        puts "Creating load balancer with #{name}, #{protocol}, #{port}, #{node_search}"
+      end
+
+      
     end
 
 
+    desc "search-nodes", "Search for nodes"
+    def search_nodes(regex)
+      # node = Compute[:rackspace].servers.find_all{|s| s.name == 'target-tgtapps-staging-app-01'}.first
+      pp @nodes.find_all{|server| server =~ regex}
+    end
   end
 end
 
