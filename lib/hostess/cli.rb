@@ -10,8 +10,7 @@
 # hostess --delete-node 'name of load balancer' --node-ip '10.x.x.x'
 # hostess --sync-nodes 'name of load balancer' --node-search '^node-regex' --node-port 80
 
-# Hostess::CLI.run(ARGV)
-
+# functions to implement http://rubydoc.info/gems/fog/1.1.2/Fog/Rackspace/LoadBalancers/Real
 
 require 'thor'
 require 'fog'
@@ -23,14 +22,12 @@ module Hostess
     def initialize(*args)
       super
 
-      @nodes = Fog::Compute[:rackspace].servers
-
-      @connection = Fog::Rackspace
-
       @load_balancers = Fog::Rackspace::LoadBalancers.new(
         :rackspace_auth_url    => 'auth.api.rackspacecloud.com',
         :rackspace_lb_endpoint => Fog::Rackspace::LoadBalancers::ORD_ENDPOINT
       )
+
+      @nodes = Fog::Compute[:rackspace].servers
     end
 
     desc "list", "List all load balancers"
@@ -42,74 +39,69 @@ module Hostess
       end
     end
 
-    desc "show", "Show a load balancer by ID"
+    desc "show ID", "Show a load balancer by ID"
     def show(load_balancer_id)
       pp @load_balancers.get_load_balancer(load_balancer_id).body['loadBalancer']
     end
 
-
-# >> @name = 'akqa-kitchen-prod-lb-80'
-# "akqa-kitchen-prod-lb-80"
-# >> @protocol = 'HTTP'
-# "HTTP"
-# >> @port = 80
-# 80
-#     >> @load_balancers.create_load_balancer(@name, @protocol, @port, [{ :type => 'PUBLIC'}], [{ :address => '10.183.4.20', :port => 80, :condition => 'ENABLED'}])
-
-    # create_load_balancer(name, protocol, port, virtual_ips, nodes)
-    desc "create", "Create a new load balancer"
+    desc "create NAME PROTOCOL PORT NODE_REGEX NODE_PORT", "Create a new load balancer"
     def create(name, protocol, port, node_search, node_port)
-      # name should be client-appname-environment-port ie target-facebooktabs-dev-80
-      # lb = @load_balancers.list_load_balancers.body['loadBalancers'].find{|key, val| key['name'] == name}
-      pattern = Regexp.new("^(.+-)\d+$")
-      lb = @load_balancers.list_load_balancers.body['loadBalancers'].find{|key, val| pattern.match(key['name']) == name}
-      
-      # [{ :address => '10.0.0.1', :port => 80, :condition => 'ENABLED'}]
+
+      pattern = Regexp.new('^(.+)-\d+$')
+      load_balancer = @load_balancers.list_load_balancers.body['loadBalancers'].find_all{|key, val| pattern.match(key['name'])[1] == name}.first
+
       nodes = search_nodes(node_search).map{|n| { :address => n, :port => Integer(node_port), :condition => 'ENABLED'} }
-      
+
+      # name should be client-appname-environment-port ie target-facebooktabs-dev-80      
       name += "-#{port}"
 
-      # @name = 'akqa-kitchen-prod-lb-80'
-      # @protocol = 'HTTP'
-      # @port = 80
-      
-      @name = name
-      @protocol = protocol
-      @port = port
-      # @nodes = [{ :address => '10.183.4.20', :port => 80, :condition => 'Enabled'}] #, {:address=>"10.183.4.25", :port=>80, :condition=>"Enabled"}]
-        @nodes = [{ :address => '10.183.4.20', :port => 80, :condition => 'ENABLED'}]
 
-      if lb
-        # @load_balancers.create_load_balancer(name, protocol, port, virtual_ips, nodes)
-        puts "Existing load balancer with #{name}, #{protocol}, #{port}, #{lb['virtualIps']}, #{nodes}"
-        pp @load_balancers.create_load_balancer(name, protocol, port, lb['virtual_ips'], nodes)
+      if load_balancer
+        vip = [ 'id'=> load_balancer['virtualIps'].find { |v| v["ipVersion"] == "IPV4" }["id"] ]
+        pp "Sharing VIP with existing load balancer with #{name}, #{protocol}, #{port}, #{vip}, #{nodes}"
       else
-        puts "@load_balancers.create_load_balancer(#{@name}, #{@protocol}, #{@port}, #{ [{ :type => 'PUBLIC' }] }, #{nodes})"
-        begin
-          pp nodes
-          @load_balancers.create_load_balancer(@name, @protocol, @port, [{ :type => 'PUBLIC'}], nodes) #[{ :address => '10.183.4.20', :port => 80, :condition => 'ENABLED'}])
-          # @load_balancers.create_load_balancer(@name, @protocol, port, [{ :type => 'PUBLIC' }], [{:address=>"10.183.4.20", :port=> 80, :condition=>"Enabled"}])
-        rescue
-          puts $!.response_data
-        end
+        vip = [{ :type => 'PUBLIC'}]
+        pp "Creating #{@name}, #{@protocol}, #{@port}, #{ [{ :type => 'PUBLIC' }] }, #{nodes})"
       end
 
-      
+        pp @load_balancers.create_load_balancer(name, protocol, port, vip, nodes)
+
     end
 
-    desc "search-load-balancers", "Search for load balancer"
-    def search_load_balancer(name)
-      search = Regexp.new(name)
+    desc "delete ID", "Delete a load balancer by ID"
+    def delete(load_balancer_id)
+      @load_balancers.delete_load_balancer(load_balancer_id)
     end
 
-    desc "search-nodes", "Search for nodes"
+    desc "list_nodes ID", "List nodes of load balancer by ID"
+    def list_nodes(load_balancer_id)
+      pp @load_balancers.list_nodes(load_balancer_id)
+    end 
+
+    desc "sync_nodes ID NODE_REGEX NODE_PORT", "Sync nodes to load balancer using given regex"
+    def sync_nodes(load_balancer_id, node_search, node_port)
+
+      nodes = search_nodes(node_search).map{|n| { :address => n, :port => Integer(node_port), :condition => 'ENABLED'} }
+
+      pp @load_balancers.update_load_balancer(load_balancer_id, { :nodes => nodes })
+    end 
+
+    desc "delete_node ID NODE_ID", "Delete node from load balancer by ID and NODE_ID"
+    def delete_node(load_balancer_id, node_id)
+      pp @load_balancers.delete_node(load_balancer_id, node_id)
+    end 
+
+    desc "search-nodes NODE_REGEX", "Search for nodes"
     def search_nodes(regex)
-      # node = Compute[:rackspace].servers.find_all{|s| s.name == 'target-tgtapps-staging-app-01'}.first
-      # search = Regexp.new(regex.gsub('*', '.*'))
       search = Regexp.new(regex)
       pp "searching for nodes containing #{search}..."
       result_nodes = @nodes.find_all{|server| search =~ server.name}
       result_nodes.collect{|n| n.addresses['private'].first}
+    end
+
+    desc "nodes", "Show all available server nodes"
+    def nodes
+      @nodes.table
     end
   end
 end
