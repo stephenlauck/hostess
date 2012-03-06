@@ -1,13 +1,14 @@
+require 'fog'
+
 module Hostess
   class LoadBalancer
- 
-    require 'fog'
 
-    def initialize(*args)
-      super
-
+    def initialize(rackspace_username, rackspace_api_key)
       @load_balancers = Fog::Rackspace::LoadBalancers.new(
+        :rackspace_username    => rackspace_username,
+        :rackspace_api_key     => rackspace_api_key,
         :rackspace_auth_url    => 'auth.api.rackspacecloud.com',
+       # TODO create way for finding/setting ENDPOINT for data center 
         :rackspace_lb_endpoint => Fog::Rackspace::LoadBalancers::ORD_ENDPOINT
       )
 
