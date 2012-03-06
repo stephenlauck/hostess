@@ -8,7 +8,6 @@ class Chef
       
       deps do
         require 'hostess'
-        require 'fog'
       end
       
       banner "knife rackspace loadbalancer list (options)"

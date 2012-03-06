@@ -12,8 +12,6 @@
 
 # functions to implement http://rubydoc.info/gems/fog/1.1.2/Fog/Rackspace/LoadBalancers/Real
 
-require 'thor'
-require 'fog'
 require 'pp'
 
 module Hostess

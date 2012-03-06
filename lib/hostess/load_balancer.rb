@@ -1,5 +1,3 @@
-require 'fog'
-
 module Hostess
   class LoadBalancer
 
