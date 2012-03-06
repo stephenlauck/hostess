@@ -1,7 +1,5 @@
 module Hostess
   class LoadBalancer
- 
-    require 'fog'
 
     def initialize(*args)
       super
