@@ -22,7 +22,10 @@ Gem::Specification.new do |s|
   # s.add_development_dependency "rspec"
   # s.add_runtime_dependency "rest-client"
 
+
   s.add_runtime_dependency "thor"
   s.add_runtime_dependency "fog", "~> 1.1.2"
   s.add_runtime_dependency "knife-rackspace"
+  s.add_development_dependency "rspec", "~> 2.8.0"
+
 end
