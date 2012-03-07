@@ -7,8 +7,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Stephen Lauck"]
   s.email       = ["stephen.lauck@akqa.com"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = %q{The best way to manage your Rackspace Loadbalancers}
+  s.description = %q{Hostess helps manage your Rackspace Cloud Loadbalancers cli or through knife plugin}
 
   s.rubyforge_project = "hostess"
 
