@@ -12,7 +12,12 @@ module Hostess
         :rackspace_lb_endpoint => Fog::Rackspace::LoadBalancers::ORD_ENDPOINT
       )
 
-      @nodes = Fog::Compute[:rackspace].servers
+      @nodes = Fog::Compute.new(
+        :provider => 'Rackspace',
+        :rackspace_username    => rackspace_username,
+        :rackspace_api_key     => rackspace_api_key,
+        :rackspace_auth_url    => 'auth.api.rackspacecloud.com'
+      ).servers
     end
 
     def list
