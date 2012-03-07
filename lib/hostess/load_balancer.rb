@@ -1,3 +1,5 @@
+require 'fog'
+
 module Hostess
   class LoadBalancer
 
@@ -14,26 +16,25 @@ module Hostess
     end
 
     def list
-      puts "id \t name\n-------------------------------"
-      @load_balancers.list_load_balancers.body['loadBalancers'].each do |lb|
-        puts "#{lb['id']}\t #{lb['name']}"
-      end
+      @load_balancers.list_load_balancers.body['loadBalancers']
     end
 
     def show(load_balancer_id)
-      pp @load_balancers.get_load_balancer(load_balancer_id).body['loadBalancer']
+      @load_balancers.get_load_balancer(load_balancer_id).body['loadBalancer']
     end
 
     def create(name, protocol, port, node_search, node_port)
-
       pattern = Regexp.new('^(.+)-\d+$')
-      load_balancer = @load_balancers.list_load_balancers.body['loadBalancers'].find_all{|key, val| pattern.match(key['name'])[1] == name}.first
 
-      nodes = search_nodes(node_search).map{|n| { :address => n, :port => Integer(node_port), :condition => 'ENABLED'} }
+      load_balancer = @load_balancers.list_load_balancers.body['loadBalancers'].find_all do |load_balancer|
+        load_balancer['name'] =~ pattern && $1 == name
+      end.first
+
+      result_nodes = search_nodes(node_search)
+      nodes = result_nodes.map{|n| { :address => n, :port => Integer(node_port), :condition => 'ENABLED'} } unless result_nodes.nil?
 
       # name should be client-appname-environment-port ie target-facebooktabs-dev-80      
       name += "-#{port}"
-
 
       if load_balancer
         vip = [ 'id'=> load_balancer['virtualIps'].find { |v| v["ipVersion"] == "IPV4" }["id"] ]
@@ -43,19 +44,18 @@ module Hostess
         pp "Creating #{@name}, #{@protocol}, #{@port}, #{ [{ :type => 'PUBLIC' }] }, #{nodes})"
       end
 
-      pp @load_balancers.create_load_balancer(name, protocol, port, vip, nodes)
-
+      @load_balancers.create_load_balancer(name, protocol, port, vip, nodes)
     end
 
     def search_nodes(regex)
       search = Regexp.new(regex)
-      pp "searching for nodes containing #{search}..."
+      pp "searching for nodes containing #{search}..."      
       result_nodes = @nodes.find_all{|server| search =~ server.name}
       result_nodes.collect{|n| n.addresses['private'].first}
     end
 
     def delete(load_balancer_id)
-      pp @load_balancers.delete_load_balancer(load_balancer_id)
+      @load_balancers.delete_load_balancer(load_balancer_id)
     end
 
     def list_nodes(load_balancer_id)
