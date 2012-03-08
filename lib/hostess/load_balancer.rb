@@ -20,7 +20,7 @@ module Hostess
     end
 
     def loadbalancer_endpoint(datacenter)
-      Fog::Rackspace::LoadBalancers.const_get("#{datacenter.upcase}_ENPOINT")
+      Fog::Rackspace::LoadBalancers.const_get("#{datacenter.upcase}_ENDPOINT")
     end
 
     def list
