@@ -1,22 +1,15 @@
 require 'chef/knife/rackspace_base'
+require 'chef/knife/rackspace_loadblancer_base'
 
 class Chef
   class Knife
     class RackspaceLoadbalancerShow < Knife
 
       include Knife::RackspaceBase
+      include RackspaceLoadbalancerBase
 
       deps do
         require 'hostess'
-      end
-
-      def loadbalancers
-        @loadbalancers ||= begin
-          Hostess::LoadBalancer.new(
-            Chef::Config[:knife][:rackspace_username],
-            Chef::Config[:knife][:rackspace_api_key]
-          )
-        end
       end
 
       banner "knife rackspace loadbalancer show LOADBALANCER_ID [LOADBALANCER_ID] (options)"

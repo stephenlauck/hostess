@@ -3,13 +3,12 @@ require 'fog'
 module Hostess
   class LoadBalancer
 
-    def initialize(rackspace_username, rackspace_api_key)
+    def initialize(rackspace_username, rackspace_api_key, rackspace_datacenter)
       @load_balancers = Fog::Rackspace::LoadBalancers.new(
         :rackspace_username    => rackspace_username,
         :rackspace_api_key     => rackspace_api_key,
         :rackspace_auth_url    => 'auth.api.rackspacecloud.com',
-       # TODO create way for finding/setting ENDPOINT for data center 
-        :rackspace_lb_endpoint => Fog::Rackspace::LoadBalancers::ORD_ENDPOINT
+        :rackspace_lb_endpoint => loadbalancer_endpoint(rackspace_datacenter)
       )
 
       @nodes = Fog::Compute.new(
@@ -18,6 +17,10 @@ module Hostess
         :rackspace_api_key     => rackspace_api_key,
         :rackspace_auth_url    => 'auth.api.rackspacecloud.com'
       ).servers
+    end
+
+    def loadbalancer_endpoint(datacenter)
+      Fog::Rackspace::LoadBalancers.const_get("#{datacenter.upcase}_ENPOINT")
     end
 
     def list

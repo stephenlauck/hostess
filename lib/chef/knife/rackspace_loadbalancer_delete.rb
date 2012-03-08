@@ -1,24 +1,17 @@
 require 'chef/knife/rackspace_base'
+require 'chef/knife/rackspace_loadblancer_base'
 
 class Chef
   class Knife
     class RackspaceLoadbalancerDelete < Knife
 
       include Knife::RackspaceBase
+      include RackspaceLoadbalancerBase
 
       banner "knife rackspace loadbalancer delete LOADBALANCER_ID [LOADBALANCER_ID] (options)"
 
       deps do
         require 'hostess'
-      end
-
-      def loadbalancers
-        @loadbalancers ||= begin
-          Hostess::LoadBalancer.new(
-            Chef::Config[:knife][:rackspace_username],
-            Chef::Config[:knife][:rackspace_api_key]
-          )
-        end
       end
 
       def run

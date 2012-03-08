@@ -1,41 +1,18 @@
 require 'chef/knife/rackspace_base'
+require 'chef/knife/rackspace_loadblancer_base'
 
 class Chef
   class Knife
     class RackspaceLoadbalancerCreate < Knife
 
       include Knife::RackspaceBase
-
-      # deps do
-      #         require 'fog'
-      #         require 'readline'
-      #         require 'chef/json_compat'
-      #         require 'chef/knife/bootstrap'
-      #         Chef::Knife::Bootstrap.load_deps
-      #       end
+      include RackspaceLoadbalancerBase
 
       deps do
         require 'hostess'
       end
       
       banner "knife rackspace loadbalancer create (options)"
-
-      # TODO figure out way to get rackspace data center Endpoint from Chef::Config
-      # maybe using code similar to comments below
-        
-      # option :flavor,
-      #   :short => "-f FLAVOR",
-      #   :long => "--flavor FLAVOR",
-      #   :description => "The flavor of server; default is 2 (512 MB)",
-      #   :proc => Proc.new { |f| Chef::Config[:knife][:flavor] = f.to_i },
-      #   :default => 2
-
-      # option :rackspace_metadata,
-      #   :short => "-M JSON",
-      #   :long => "--rackspace-metadata JSON",
-      #   :description => "JSON string version of metadata hash to be supplied with the server create call",
-      #   :proc => Proc.new { |m| Chef::Config[:knife][:rackspace_metadata] = JSON.parse(m) },
-      #   :default => ""
 
       # create(name, protocol, port, node_search, node_port)
       option :name,
@@ -62,15 +39,6 @@ class Chef
         :short => "-n NODE_PORT",
         :long => "--node-port NODE_PORT",
         :description => "The port for added nodes"
-
-      def loadbalancers
-        @loadbalancers ||= begin
-          Hostess::LoadBalancer.new(
-            Chef::Config[:knife][:rackspace_username],
-            Chef::Config[:knife][:rackspace_api_key]
-          )
-        end
-      end
 
       def run
         $stdout.sync = true
