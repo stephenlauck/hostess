@@ -1,5 +1,5 @@
 require 'chef/knife/rackspace_base'
-require 'chef/knife/rackspace_loadblancer_base'
+require 'chef/knife/rackspace_loadbalancer_base'
 
 class Chef
   class Knife
