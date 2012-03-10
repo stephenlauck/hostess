@@ -46,10 +46,10 @@ module Hostess
 
       if load_balancer
         vip = [ 'id'=> load_balancer['virtualIps'].find { |v| v["ipVersion"] == "IPV4" }["id"] ]
-        pp "Sharing VIP with existing load balancer with #{name}, #{protocol}, #{port}, #{vip}, #{nodes}"
+        pp "Sharing VIP with existing load balancer #{name}"
       else
         vip = [{ :type => 'PUBLIC'}]
-        pp "Creating #{@name}, #{@protocol}, #{@port}, #{ [{ :type => 'PUBLIC' }] }, #{nodes})"
+        pp "Creating #{@name}, #{@protocol}, #{@port}"
       end
 
       @load_balancers.create_load_balancer(name, protocol, port, vip, nodes)

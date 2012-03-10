@@ -43,7 +43,7 @@ class Chef
       def run
         $stdout.sync = true
 
-        loadbalancer = loadbalancers.create(
+        response = loadbalancers.create(
           config[:name],
           config[:protocol],
           config[:port],
@@ -51,16 +51,16 @@ class Chef
           config[:node_port]
         )
 
-        puts loadbalancer
+        loadbalancer = response.body['loadBalancer']
         # ["name", "id", "protocol", "port", "algorithm", "status", "created", "virtualIps", "updated"]
         puts "\n"
-        puts "#{ui.color("Instance ID", :cyan)}: #{loadbalancer['id'].to_s}"
-        puts "#{ui.color("Name", :cyan)}: #{loadbalancer['name']}"
-        puts "#{ui.color("Protocol", :cyan)}: #{loadbalancer['protocol']}"
-        puts "#{ui.color("Port", :cyan)}: #{loadbalancer['port'].to_s}"
-        puts "#{ui.color("Algorithm", :cyan)}: #{loadbalancer['algorithm']}"
+        puts "#{ui.color("Instance ID", :cyan)}: #{loadbalancer['id'] == nil ? "" : loadbalancer['id'].to_s}"
+        puts "#{ui.color("Name", :cyan)}: #{loadbalancer['name'] == nil ? "" : loadbalancer['name']}"
+        puts "#{ui.color("Protocol", :cyan)}: #{loadbalancer['protocol'] == nil ? "" : loadbalancer['protocol']}"
+        puts "#{ui.color("Port", :cyan)}: #{loadbalancer['port'] == nil ? "" : loadbalancer['port'].to_s}"
+        puts "#{ui.color("Algorithm", :cyan)}: #{loadbalancer['algorithm'] == nil ? "" : loadbalancer['algorithm']}"
         puts "#{ui.color("Virtual IP", :cyan)}: #{loadbalancer['virtualIps'].first['address'] == nil ? "" : loadbalancer['virtualIps'].first['address']}"
-        puts "#{ui.color("Status", :cyan)}: #{loadbalancer['status']}"
+        puts "#{ui.color("Status", :cyan)}: #{loadbalancer['status'] == nil ? "" : loadbalancer['status']}"
         
       end
     end
